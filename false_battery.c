@@ -18,8 +18,10 @@
 #include <linux/skbuff.h>
 
 #define NETLINK_USER 31
+#define MAX_BATTERIES 5
+
 struct sock *nl_sk = NULL;
-struct power_supply *fake_batteries;
+struct power_supply *fake_batteries[MAX_BATTERIES];
 
 
 ///////////////////////////////////////////
@@ -89,7 +91,6 @@ static int get_battery_property(struct power_supply *psy,
 
 }
 
-#define MAX_BATTERIES 5
 static int numBatteries = 0;
 
 static int remove_all_battery_supplies(void){
@@ -111,7 +112,7 @@ static int add_battery_supply (const struct power_supply_config *config,
         return -1;
     }
 
-    fake_batteries[numBatteries] = *power_supply_register(NULL, description, config);
+    fake_batteries[numBatteries] = power_supply_register(NULL, description, config);
     numBatteries++;
 
     printk(KERN_INFO "Number of Batteries: %d\n", numBatteries);
