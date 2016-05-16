@@ -112,14 +112,6 @@ static int add_battery_supply (const struct power_supply_config *config,
         return -1;
     }
 
-    fake_batteries[numBatteries] = power_supply_register(NULL, description, config);
-    if(IS_ERR(fake_batteries[numBatteries])){
-        printk(KERN_ERR "Failed to create a battery\n");
-        return -2;
-    }
-
-    printk(KERN_INFO "Number of Batteries: %d\n", ++numBatteries);
-    return 0;
 
     // power_supply_register( NULL, description, config);
 }
@@ -135,8 +127,14 @@ static int make_battery(void){
 
     static struct power_supply_config battery_config = {};
 
-    return add_battery_supply(&battery_description, &battery_config);
+    fake_batteries[numBatteries] = power_supply_register(NULL, &battery_description, &battery_config);
+    if(IS_ERR(fake_batteries[numBatteries])){
+        printk(KERN_ERR "Failed to create a battery\n");
+        return -2;
+    }
 
+    printk(KERN_INFO "Number of Batteries: %d\n", ++numBatteries);
+    return 0;
 }
 
 static void recieve_msg_handler(struct sk_buff *skb){
