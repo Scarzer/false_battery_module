@@ -20,6 +20,35 @@
 #define NETLINK_USER 31
 struct sock *nl_sk = NULL;
 
+
+
+///////////////////////////////////////////
+/// \section Structs
+/// \abstract All of the structs I'll be using
+///
+//////////////////////////////////////////
+
+static enum power_supply_property battery_props[] = {
+    POWER_SUPPLY_PROP_STATUS,
+    POWER_SUPPLY_PROP_CHARGE_TYPE,
+    POWER_SUPPLY_PROP_HEALTH,
+    POWER_SUPPLY_PROP_PRESENT,
+    POWER_SUPPLY_PROP_TECHNOLOGY,
+    POWER_SUPPLY_PROP_CHARGE_FULL_DESIGN,
+    POWER_SUPPLY_PROP_CHARGE_FULL,
+    POWER_SUPPLY_PROP_CHARGE_NOW,
+    POWER_SUPPLY_PROP_CAPACITY,
+    POWER_SUPPLY_PROP_CAPACITY_LEVEL,
+    POWER_SUPPLY_PROP_TIME_TO_EMPTY_AVG,
+    POWER_SUPPLY_PROP_TIME_TO_FULL_NOW,
+    POWER_SUPPLY_PROP_MODEL_NAME,
+    POWER_SUPPLY_PROP_MANUFACTURER,
+    POWER_SUPPLY_PROP_SERIAL_NUMBER,
+};
+
+
+
+
 static void hello_nl_recieve_msg(struct sk_buff *skb){
     struct nlmsghdr *nlh;
     int pid;
@@ -51,6 +80,46 @@ static void hello_nl_recieve_msg(struct sk_buff *skb){
 
 }
 
+
+// Battery Functions as they are written in test_power.c
+static int get_battery_property(struct power_supply *psy,
+                                enum power_supply_property psp,
+                                union power_supply_proval *val){
+    return 0;
+
+}
+
+#define MAX_BATTERIES 5
+static int numBatteries = 0;
+static int remove_all_battery_supplies(void){
+    return 0;
+}
+
+
+static void add_battery_supply (const struct power_supply_config *config,
+                               const struct power_supply_desc *description){
+
+    printk(KERN_INFO "INSIDE: %s", __FUNCTION__);
+    printk(KERN_INFO "Number of Batteries: %d\n", ++numBatteries);
+
+    // power_supply_register( NULL, description, config);
+}
+
+static int make_battery(void){
+    // TODO turn into one init function
+    static struct power_supply_desc battery_description;
+    battery_description.name            = "test_battery";
+    battery_description.type            = POWER_SUPPLY_TYPE_BATTERY;
+    battery_description.properties      = battery_props;
+    battery_description.num_properties  = ARRAY_SIZE(battery_props);
+    battery_description.get_property    = get_battery_property;
+
+    static struct power_supply_config battery_config = {};
+
+    add_battery_supply(&battery_description, &battery_config);
+
+}
+
 static void recieve_msg_handler(struct sk_buff *skb){
     struct nlmsghdr *nlh;
     int pid;
@@ -75,6 +144,9 @@ static void recieve_msg_handler(struct sk_buff *skb){
         return;
     }
 
+    // Adding my own function here. Will be executed from here
+    make_battery();
+
     nlh = nlmsg_put(skb_out, 0, 0, NLMSG_DONE, msg_size, 0);
     NETLINK_CB(skb_out).dst_group = 0;
     strncpy(nlmsg_data(nlh), msg, msg_size);
@@ -85,11 +157,9 @@ static void recieve_msg_handler(struct sk_buff *skb){
 
 }
 
-static struct power_supply *add_battery_supply;
-
-
 static int __init hello_init(void){
     printk("Entering: %s\n", __FUNCTION__);
+    static struct power_supply *fake_batteries[MAX_BATTERIES];
     struct netlink_kernel_cfg cfg = { .input = recieve_msg_handler, };
 
     nl_sk = netlink_kernel_create(&init_net, NETLINK_USER, &cfg);

@@ -9,8 +9,7 @@ LINUX_HEADERS_PATH = /usr/lib/modules/`uname -r`/build
 
 SOURCES += \
     false_battery.c \
-    test_program/test_netlink.c \
-    false_battery.mod.c
+    test_program/test_netlink.c
 
 INCLUDEPATH += $$system(find -L $$LINUX_HEADERS_PATH/include -type d)
 INCLUDEPATH += $$system(find -L $$LINUX_HEADERS_PATH/arch/$$ARCH/include -type d)
