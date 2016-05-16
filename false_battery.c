@@ -94,6 +94,7 @@ static int get_battery_property(struct power_supply *psy,
 static int numBatteries = 0;
 
 static int remove_all_battery_supplies(void){
+    if(numBatteries == 0) return 0;
     int i = numBatteries;
     while(i -->=0){
         power_supply_unregister(fake_batteries[numBatteries]);
@@ -113,7 +114,7 @@ static int add_battery_supply (const struct power_supply_config *config,
 
     fake_batteries[numBatteries] = power_supply_register(NULL, description, config);
     if(IS_ERR(fake_batteries[numBatteries])){
-        printk(KERN_ERR "Failed to create a battery");
+        printk(KERN_ERR "Failed to create a battery\n");
         return -2;
     }
 
