@@ -212,3 +212,7 @@ static int __exit hello_exit(void){
 
 module_init(hello_init);
 module_exit(hello_exit);
+
+MODULE_DESCRIPTION("Battery Driver for virtual batteries with netlink control.");
+MODULE_AUTHOR("Irving Derin <Irving.Derin@gmail.com>");
+MODULE_LICENSE("GPL");
