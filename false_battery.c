@@ -95,9 +95,8 @@ static int numBatteries = 0;
 
 static int remove_all_battery_supplies(void){
     int i = numBatteries;
-    while(i--){
-        power_supply_unregister(&fake_batteries[numBatteries]);
-
+    while(i -->=0){
+        power_supply_unregister(fake_batteries[numBatteries]);
         numBatteries--;
     }
 }
