@@ -96,6 +96,7 @@ static int remove_all_battery_supplies(void){
     int i = numBatteries;
     while(i--){
         power_supply_unregister(&fake_batteries[numBatteries]);
+
         numBatteries--;
     }
 }
@@ -203,7 +204,7 @@ static int __exit hello_exit(void){
     printk(KERN_INFO "Leaving Battery Module. Cleaning up made power supplies");
     printk(KERN_INFO "Number of batteries to remove: %d", numBatteries);
     int removal = remove_all_battery_supplies();
-    print(KERN_INFO "LEAVING WITH %d BATTERIES", numBatteries);
+    printk(KERN_INFO "LEAVING WITH %d BATTERIES", numBatteries);
     netlink_kernel_release(nl_sk);
 
     return 0;
