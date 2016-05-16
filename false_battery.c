@@ -548,19 +548,19 @@ static void recieve_msg_handler (struct sk_buff *skb){
     pid = nlh->nlmsg_pid;
     msg = (char *)nlmsg_data(nlh);
 
-    if( strcmp(msg, "charge1") != 0){
+    if( strncmp(msg, "c1", 2) == 0){
         printk(KERN_INFO "Charging Battery 1");
         battery_capacity++;
         signal_power_supply_changed(test_power_supplies[TEST_BATTERY_ONE]);
-    } else if ( strcmp(msg, "discharge1" != 0)){
+    } else if ( strncmp(msg, "d1", 2) == 0){
         printk(KERN_INFO "Discharing Battery 1");
         battery_capacity--;
         signal_power_supply_changed(test_power_supplies[TEST_BATTERY_ONE]);
-    } else if( strcmp(msg, "charge2") != 0){
+    } else if( strncmp(msg, "c2", 2) == 0){
         printk(KERN_INFO "Charging Battery 2");
         battery_capacity++;
         signal_power_supply_changed(test_power_supplies[TEST_BATTERY_TWO]);
-    } else if ( strcmp(msg, "discharge2" != 0)){
+    } else if ( strncmp(msg, "d2", 2) == 0){
         printk(KERN_INFO "Discharing Battery 2");
         battery_capacity--;
         signal_power_supply_changed(test_power_supplies[TEST_BATTERY_TWO]);
