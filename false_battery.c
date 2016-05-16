@@ -112,9 +112,12 @@ static int add_battery_supply (const struct power_supply_config *config,
     }
 
     fake_batteries[numBatteries] = power_supply_register(NULL, description, config);
-    numBatteries++;
+    if(IS_ERR(fake_batteries[numBatteries])){
+        printk(KERN_ERR "Failed to create a battery");
+        return -2;
+    }
 
-    printk(KERN_INFO "Number of Batteries: %d\n", numBatteries);
+    printk(KERN_INFO "Number of Batteries: %d\n", ++numBatteries);
     return 0;
 
     // power_supply_register( NULL, description, config);
@@ -158,7 +161,7 @@ static void recieve_msg_handler(struct sk_buff *skb){
     /////////////////////////////////////
     /// Adding my own function here. Will be executed from here
 
-    if(make_battery() == -1){
+    if(make_battery() < 0){
         msg = "ERROR: Max Batteries Achieved";
         msg_size = strlen(msg);
         skb_out = nlmsg_new(msg_size, 0);
