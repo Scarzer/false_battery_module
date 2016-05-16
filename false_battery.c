@@ -551,19 +551,43 @@ static void recieve_msg_handler (struct sk_buff *skb){
     if( strncmp(msg, "c1", 2) == 0){
         printk(KERN_INFO "Charging Battery 1\n");
         battery_capacity++;
+        battery_health = POWER_SUPPLY_HEALTH_GOOD;
+        battery_status = POWER_SUPPLY_STATUS_CHARGING;
         signal_power_supply_changed(test_power_supplies[TEST_BATTERY_ONE]);
+
     } else if ( strncmp(msg, "d1", 2) == 0){
         printk(KERN_INFO "Discharing Battery 1\n");
         battery_capacity--;
+        battery_health = POWER_SUPPLY_HEALTH_GOOD;
+        battery_status = POWER_SUPPLY_STATUS_DISCHARGING;
         signal_power_supply_changed(test_power_supplies[TEST_BATTERY_ONE]);
+
     } else if( strncmp(msg, "c2", 2) == 0){
         printk(KERN_INFO "Charging Battery 2\n");
         battery_capacity++;
+        battery_health = POWER_SUPPLY_HEALTH_GOOD;
+        battery_status = POWER_SUPPLY_STATUS_CHARGING;
         signal_power_supply_changed(test_power_supplies[TEST_BATTERY_TWO]);
+
     } else if ( strncmp(msg, "d2", 2) == 0){
         printk(KERN_INFO "Discharing Battery 2\n");
         battery_capacity--;
+        battery_health = POWER_SUPPLY_HEALTH_GOOD;
+        battery_status = POWER_SUPPLY_STATUS_DISCHARGING;
         signal_power_supply_changed(test_power_supplies[TEST_BATTERY_TWO]);
+
+    } else if ( strncmp(msg, "k1", 2) == 0){
+        printk(KERN_INFO "Killing Battery 1\n");
+        battery_health = POWER_SUPPLY_HEALTH_DEAD;
+        battery_capacity = 2;
+        signal_power_supply_changed(test_power_supplies[TEST_BATTERY_ONE]);
+
+    } else if ( strncmp(msg, "k2", 2) == 0){
+        printk(KERN_INFO "Killing Battery 2\n");
+        battery_health = POWER_SUPPLY_HEALTH_DEAD;
+        battery_capacity = 2;
+        signal_power_supply_changed(test_power_supplies[TEST_BATTERY_TWO]);
+
     } else printk(KERN_INFO "How'd you get here?\n");
 
 
