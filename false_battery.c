@@ -549,22 +549,22 @@ static void recieve_msg_handler (struct sk_buff *skb){
     msg = (char *)nlmsg_data(nlh);
 
     if( strncmp(msg, "c1", 2) == 0){
-        printk(KERN_INFO "Charging Battery 1");
+        printk(KERN_INFO "Charging Battery 1\n");
         battery_capacity++;
         signal_power_supply_changed(test_power_supplies[TEST_BATTERY_ONE]);
     } else if ( strncmp(msg, "d1", 2) == 0){
-        printk(KERN_INFO "Discharing Battery 1");
+        printk(KERN_INFO "Discharing Battery 1\n");
         battery_capacity--;
         signal_power_supply_changed(test_power_supplies[TEST_BATTERY_ONE]);
     } else if( strncmp(msg, "c2", 2) == 0){
-        printk(KERN_INFO "Charging Battery 2");
+        printk(KERN_INFO "Charging Battery 2\n");
         battery_capacity++;
         signal_power_supply_changed(test_power_supplies[TEST_BATTERY_TWO]);
     } else if ( strncmp(msg, "d2", 2) == 0){
-        printk(KERN_INFO "Discharing Battery 2");
+        printk(KERN_INFO "Discharing Battery 2\n");
         battery_capacity--;
         signal_power_supply_changed(test_power_supplies[TEST_BATTERY_TWO]);
-    } else printk(KERN_INFO "How'd you get here?");
+    } else printk(KERN_INFO "How'd you get here?\n");
 
 
 
