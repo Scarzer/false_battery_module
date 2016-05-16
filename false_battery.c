@@ -57,6 +57,14 @@ static int battery_technology		= POWER_SUPPLY_TECHNOLOGY_LION;
 static int battery_capacity		= 50;
 static int battery_voltage		= 3300;
 
+static int battery_status1		= POWER_SUPPLY_STATUS_DISCHARGING;
+static int battery_health1		= POWER_SUPPLY_HEALTH_GOOD;
+static int battery_present1		= 1; /* true */
+static int battery_technology1		= POWER_SUPPLY_TECHNOLOGY_LION;
+static int battery_capacity1		= 50;
+static int battery_voltage1		= 3300;
+
+
 static bool module_initialized;
 
 static int test_power_get_ac_property(struct power_supply *psy,
@@ -144,6 +152,64 @@ static int test_power_get_battery_property(struct power_supply *psy,
     return 0;
 }
 
+static int test_power_get_battery_property1(struct power_supply *psy,
+                       enum power_supply_property psp,
+                       union power_supply_propval *val)
+{
+    switch (psp) {
+    case POWER_SUPPLY_PROP_MODEL_NAME:
+        val->strval = "Test battery 2";
+        break;
+    case POWER_SUPPLY_PROP_MANUFACTURER:
+        val->strval = "Linux";
+        break;
+    case POWER_SUPPLY_PROP_SERIAL_NUMBER:
+        val->strval = UTS_RELEASE;
+        break;
+    case POWER_SUPPLY_PROP_STATUS:
+        val->intval = battery_status1;
+        break;
+    case POWER_SUPPLY_PROP_CHARGE_TYPE:
+        val->intval = POWER_SUPPLY_CHARGE_TYPE_FAST;
+        break;
+    case POWER_SUPPLY_PROP_HEALTH:
+        val->intval = battery_health1;
+        break;
+    case POWER_SUPPLY_PROP_PRESENT:
+        val->intval = battery_present1;
+        break;
+    case POWER_SUPPLY_PROP_TECHNOLOGY:
+        val->intval = battery_technology1;
+        break;
+    case POWER_SUPPLY_PROP_CAPACITY_LEVEL:
+        val->intval = POWER_SUPPLY_CAPACITY_LEVEL_NORMAL;
+        break;
+    case POWER_SUPPLY_PROP_CAPACITY:
+    case POWER_SUPPLY_PROP_CHARGE_NOW:
+        val->intval = battery_capacity1;
+        break;
+    case POWER_SUPPLY_PROP_CHARGE_FULL_DESIGN:
+    case POWER_SUPPLY_PROP_CHARGE_FULL:
+        val->intval = 100;
+        break;
+    case POWER_SUPPLY_PROP_TIME_TO_EMPTY_AVG:
+    case POWER_SUPPLY_PROP_TIME_TO_FULL_NOW:
+        val->intval = 3600;
+        break;
+    case POWER_SUPPLY_PROP_TEMP:
+        val->intval = 26;
+        break;
+    case POWER_SUPPLY_PROP_VOLTAGE_NOW:
+        val->intval = battery_voltage1;
+        break;
+    default:
+        pr_info("%s: some properties deliberately report errors.\n",
+            __func__);
+        return -EINVAL;
+    }
+    return 0;
+}
+
 static enum power_supply_property test_power_ac_props[] = {
     POWER_SUPPLY_PROP_ONLINE,
 };
@@ -194,7 +260,7 @@ static const struct power_supply_desc test_power_desc[] = {
         .type = POWER_SUPPLY_TYPE_BATTERY,
         .properties = test_power_battery_props,
         .num_properties = ARRAY_SIZE(test_power_battery_props),
-        .get_property = test_power_get_battery_property,
+        .get_property = test_power_get_battery_property1,
     },
     [TEST_USB] = {
         .name = "test_usb",
@@ -564,16 +630,16 @@ static void recieve_msg_handler (struct sk_buff *skb){
 
     } else if( strncmp(msg, "c2", 2) == 0){
         printk(KERN_INFO "Charging Battery 2\n");
-        battery_capacity++;
-        battery_health = POWER_SUPPLY_HEALTH_GOOD;
-        battery_status = POWER_SUPPLY_STATUS_CHARGING;
+        battery_capacity1++;
+        battery_health1 = POWER_SUPPLY_HEALTH_GOOD;
+        battery_status1 = POWER_SUPPLY_STATUS_CHARGING;
         signal_power_supply_changed(test_power_supplies[TEST_BATTERY_TWO]);
 
     } else if ( strncmp(msg, "d2", 2) == 0){
         printk(KERN_INFO "Discharing Battery 2\n");
-        battery_capacity--;
-        battery_health = POWER_SUPPLY_HEALTH_GOOD;
-        battery_status = POWER_SUPPLY_STATUS_DISCHARGING;
+        battery_capacity1--;
+        battery_health1 = POWER_SUPPLY_HEALTH_GOOD;
+        battery_status1 = POWER_SUPPLY_STATUS_DISCHARGING;
         signal_power_supply_changed(test_power_supplies[TEST_BATTERY_TWO]);
 
     } else if ( strncmp(msg, "k1", 2) == 0){
@@ -584,8 +650,20 @@ static void recieve_msg_handler (struct sk_buff *skb){
 
     } else if ( strncmp(msg, "k2", 2) == 0){
         printk(KERN_INFO "Killing Battery 2\n");
+        battery_health1 = POWER_SUPPLY_HEALTH_DEAD;
+        battery_capacity1 = 2;
+        signal_power_supply_changed(test_power_supplies[TEST_BATTERY_TWO]);
+
+    } else if ( strncmp(msg, "p1", 2) == 0){
+        printk(KERN_INFO "Toggling presence of 1\n");
         battery_health = POWER_SUPPLY_HEALTH_DEAD;
         battery_capacity = 2;
+        signal_power_supply_changed(test_power_supplies[TEST_BATTERY_ONE]);
+
+    } else if ( strncmp(msg, "p2", 2) == 0){
+        printk(KERN_INFO "Toggling presence of 2\n");
+        battery_health1 = POWER_SUPPLY_HEALTH_DEAD;
+        battery_capacity1 = 2;
         signal_power_supply_changed(test_power_supplies[TEST_BATTERY_TWO]);
 
     } else printk(KERN_INFO "How'd you get here?\n");
