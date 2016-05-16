@@ -36,6 +36,8 @@
 #define NETLINK_USER 31
 #define MAX_BATTERIES 5
 
+static void recieve_msg_handler (struct sk_buff *skb);
+
 struct sock *nl_sk = NULL;
 
 enum test_power_id {
@@ -218,40 +220,7 @@ static const struct power_supply_config test_power_configs[] = {
     },
 };
 
-static void recieve_msg_handler (struct sk_buff *skb){
-    struct nlmsghdr *nlh;
-    int pid;
-    struct sk_buff *skb_out;
-    int msg_size;
-    int res;
-    char *msg;
-    char *parameter;
-    char *value;
 
-    printk(KERN_INFO "Entered: %s\n", __FUNCTION__);
-
-    nlh = (struct nlmsghdr *)skb->data;
-    printk(KERN_INFO "Netlink received msg payload:%s\n", (char *)nlmsg_data(nlh));
-    pid = nlh->nlmsg_pid;
-    msg = (char *)nlmsg_data(nlh);
-
-    if( strcmp(msg, "add") ){
-        printk(KERN_INFO "Adding something");
-    }
-
-
-
-    skb_out = nlmsg_new(msg_size, 0);
-
-    nlh = nlmsg_put(skb_out, 0, 0, NLMSG_DONE, msg_size, 0);
-    NETLINK_CB(skb_out).dst_group = 0;
-    strncpy(nlmsg_data(nlh), msg, msg_size);
-
-    res = nlmsg_unicast(nl_sk, skb_out, pid);
-    if (res < 0)
-        printk(KERN_INFO "Error while sending bak to usr\n");
-
-}
 
 static int __init test_power_init(void)
 {
@@ -560,6 +529,50 @@ static const struct kernel_param_ops param_ops_battery_voltage = {
     .set = param_set_battery_voltage,
     .get = param_get_battery_voltage,
 };
+
+
+static void recieve_msg_handler (struct sk_buff *skb){
+    struct nlmsghdr *nlh;
+    int pid;
+    struct sk_buff *skb_out;
+    int msg_size;
+    int res;
+    char *msg;
+    char *parameter;
+    char *value;
+
+    printk(KERN_INFO "Entered: %s\n", __FUNCTION__);
+
+    nlh = (struct nlmsghdr *)skb->data;
+    printk(KERN_INFO "Netlink received msg payload:%s\n", (char *)nlmsg_data(nlh));
+    pid = nlh->nlmsg_pid;
+    msg = (char *)nlmsg_data(nlh);
+
+    if( strcmp(msg, "add") ){
+        printk(KERN_INFO "Adding something");
+    } else if ( strcmp(msg, "cap")){
+        printk(KERN_INFO "Changing capacity of battery 1");
+        battery_capacity = 33;
+        signal_power_supply_changed(test_power_supplies[TEST_BATTERY_ONE]);
+
+
+    }
+
+
+
+    skb_out = nlmsg_new(msg_size, 0);
+
+    nlh = nlmsg_put(skb_out, 0, 0, NLMSG_DONE, msg_size, 0);
+    NETLINK_CB(skb_out).dst_group = 0;
+    strncpy(nlmsg_data(nlh), msg, msg_size);
+
+    res = nlmsg_unicast(nl_sk, skb_out, pid);
+    if (res < 0)
+        printk(KERN_INFO "Error while sending bak to usr\n");
+
+}
+
+
 
 #define param_check_ac_online(name, p) __param_check(name, p, void);
 #define param_check_usb_online(name, p) __param_check(name, p, void);
