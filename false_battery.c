@@ -19,7 +19,7 @@
 
 #define NETLINK_USER 31
 struct sock *nl_sk = NULL;
-
+struct power_supply *fake_batteries;
 
 
 ///////////////////////////////////////////
@@ -91,16 +91,30 @@ static int get_battery_property(struct power_supply *psy,
 
 #define MAX_BATTERIES 5
 static int numBatteries = 0;
+
 static int remove_all_battery_supplies(void){
-    return 0;
+    int i = numBatteries;
+    while(i--){
+        power_supply_unregister(&fake_batteries[numBatteries]);
+        numBatteries--;
+    }
 }
 
 
-static void add_battery_supply (const struct power_supply_config *config,
+static int add_battery_supply (const struct power_supply_config *config,
                                const struct power_supply_desc *description){
 
     printk(KERN_INFO "INSIDE: %s", __FUNCTION__);
-    printk(KERN_INFO "Number of Batteries: %d\n", ++numBatteries);
+    if(numBatteries >= MAX_BATTERIES){
+        printk(KERN_INFO "Max Number of batteries added");
+        return -1;
+    }
+
+    fake_batteries[numBatteries] = *power_supply_register(NULL, description, config);
+    numBatteries++;
+
+    printk(KERN_INFO "Number of Batteries: %d\n", numBatteries);
+    return 0;
 
     // power_supply_register( NULL, description, config);
 }
@@ -116,7 +130,7 @@ static int make_battery(void){
 
     static struct power_supply_config battery_config = {};
 
-    add_battery_supply(&battery_description, &battery_config);
+    return add_battery_supply(&battery_description, &battery_config);
 
 }
 
@@ -139,14 +153,24 @@ static void recieve_msg_handler(struct sk_buff *skb){
     // This is what is getting sent out is generated.
     // nlmsg_new takes a size for a buffer
     skb_out = nlmsg_new(msg_size, 0);
-    if (!skb_out){
-        printk(KERN_ERR "Failed to allocate new skb\n");
-        return;
+
+    /////////////////////////////////////
+    /// Adding my own function here. Will be executed from here
+
+    if(make_battery() == -1){
+        msg = "ERROR: Max Batteries Achieved";
+        msg_size = strlen(msg);
+        skb_out = nlmsg_new(msg_size, 0);
+        if (!skb_out){
+            printk(KERN_ERR "Failed to allocate new skb\n");
+            return;
+        }
+
     }
 
-    // Adding my own function here. Will be executed from here
-    make_battery();
-
+    //////////////////////////////////////
+    /// Sending of the messages here
+    ///
     nlh = nlmsg_put(skb_out, 0, 0, NLMSG_DONE, msg_size, 0);
     NETLINK_CB(skb_out).dst_group = 0;
     strncpy(nlmsg_data(nlh), msg, msg_size);
@@ -157,9 +181,13 @@ static void recieve_msg_handler(struct sk_buff *skb){
 
 }
 
+//////////////////////////////////////
+/// Kernel Endpoints
+///
+///
 static int __init hello_init(void){
     printk("Entering: %s\n", __FUNCTION__);
-    static struct power_supply *fake_batteries[MAX_BATTERIES];
+    struct power_supply *fake_batteries[MAX_BATTERIES];
     struct netlink_kernel_cfg cfg = { .input = recieve_msg_handler, };
 
     nl_sk = netlink_kernel_create(&init_net, NETLINK_USER, &cfg);
@@ -172,7 +200,10 @@ static int __init hello_init(void){
 }
 
 static int __exit hello_exit(void){
-    printk(KERN_INFO "exiting hello module\n");
+    printk(KERN_INFO "Leaving Battery Module. Cleaning up made power supplies");
+    printk(KERN_INFO "Number of batteries to remove: %d", numBatteries);
+    int removal = remove_all_battery_supplies();
+    print(KERN_INFO "LEAVING WITH %d BATTERIES", numBatteries);
     netlink_kernel_release(nl_sk);
 
     return 0;
